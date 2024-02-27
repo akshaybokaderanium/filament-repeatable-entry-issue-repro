@@ -94,7 +94,7 @@ class ConsentRequest extends SimplePage
                                         ->markdown(),
                                     ViewEntry::make('acceptConsent')
                                         ->label('')
-                                        ->view('user-consent::infolists.components.consent-option-checkbox'),
+                                        ->view('infolist.consent-option-checkbox'),
                                     // ConsentAcceptForm::make('Agreement Info'),
                                     TextEntry::make('updated_at')
                                         ->label('')
@@ -121,7 +121,6 @@ class ConsentRequest extends SimplePage
                             ->icon('heroicon-o-check-circle')
                             ->color('success')
                             ->before(function (Action $action) {
-                                dd($action);
                                 $this->validateConsents($action);
                             })
                             ->action(function (array $data) {
