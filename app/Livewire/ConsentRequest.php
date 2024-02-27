@@ -20,9 +20,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
-use Visualbuilder\FilamentUserConsent\Infolists\Components\ConsentAcceptForm;
-use Visualbuilder\FilamentUserConsent\Models\ConsentOption;
-use Visualbuilder\FilamentUserConsent\Notifications\ConsentsUpdatedNotification;
+use App\Models\ConsentOption;
 
 class ConsentRequest extends SimplePage
 {
@@ -39,7 +37,17 @@ class ConsentRequest extends SimplePage
 
     public function mount(): void
     {
+        $this->user = auth()->user();
 
+        if(!$this->user) {
+            abort(403, 'Forbidden User');
+        }
+
+        $this->user->collections = $this->user->outstandingConsents();
+
+        if ($this->user->collections->count() < 1) {
+            abort(403, 'No required consent');
+        }
     }
 
     public static ?string $title = 'Your consent is required';
@@ -194,7 +202,6 @@ class ConsentRequest extends SimplePage
             ->color('success')
             ->send();
 
-        $this->user->notify(new ConsentsUpdatedNotification());
 
         return redirect(request()->session()->get('url.saved'));
     }
