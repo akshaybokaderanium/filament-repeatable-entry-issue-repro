@@ -39,7 +39,7 @@ class ConsentRequest extends SimplePage
     {
         $this->user = auth()->user();
 
-        if(!$this->user) {
+        if (!$this->user) {
             abort(403, 'Forbidden User');
         }
 
@@ -74,59 +74,58 @@ class ConsentRequest extends SimplePage
         return $infolist
             ->record($this->user)
             ->schema([
-                    RepeatableEntry::make('collections')
-                        ->label('')
-                        ->schema([
-                            Section::make(fn (ConsentOption $record) => "{$record->title} v{$record->version}")
-                                ->description(function (ConsentOption $record) {
-                                    $suffix = $this->previousConsents($record->key);
-                                    $mandatory = $record->is_mandatory ? 'Mandatory' : 'Optional';
-                                    if ($suffix) {
-                                        $mandatory .= " - ( $suffix )";
-                                    }
+                RepeatableEntry::make('collections')
+                    ->label('')
+                    ->schema([
+                        Section::make(fn (ConsentOption $record) => "{$record->title} v{$record->version}")
+                            ->description(function (ConsentOption $record) {
+                                $suffix = $this->previousConsents($record->key);
+                                $mandatory = $record->is_mandatory ? 'Mandatory' : 'Optional';
+                                if ($suffix) {
+                                    $mandatory .= " - ( $suffix )";
+                                }
 
-                                    return $mandatory;
-                                })
-                                ->icon(fn (ConsentOption $record) => $record->is_mandatory ? 'heroicon-o-check-badge' : 'heroicon-o-question-mark-circle')
-                                ->iconColor(fn (ConsentOption $record) => $record->is_mandatory ? 'success' : 'info')
-                                ->schema([
-                                    TextEntry::make('text')->label('')
-                                        ->markdown(),
-                                    ViewEntry::make('acceptConsent')
-                                        ->label('')
-                                        ->view('infolist.consent-option-checkbox'),
-                                    // ConsentAcceptForm::make('Agreement Info'),
-                                    TextEntry::make('updated_at')
-                                        ->label('')
-                                        ->alignEnd()
-                                        ->html()
-                                        ->state(function (ConsentOption $record): string {
-                                            return new HtmlString('<strong>Last Updated</strong>: '.$record->updated_at->format('d M Y'));
-                                        })
-                                ])
-                                ->collapsible()
-                                ->collapsed(function(ConsentOption $record){
-                                    $first = $this->user->collections->first();
-                                    return  !($first->id === $record->id);
-                                })
-//                                ->persistCollapsed()
-                                ->id(fn (ConsentOption $record) => "consent-option-{$record->id}")
-                            ,
-                        ])
-                        ->contained(false)
-                        ->columns(2)
-                        ->columnSpanFull(),
-                    Actions::make([
-                        Action::make('saveConsents')
-                            ->icon('heroicon-o-check-circle')
-                            ->color('success')
-                            ->before(function (Action $action) {
-                                $this->validateConsents($action);
+                                return $mandatory;
                             })
-                            ->action(function (array $data) {
-                                $this->acceptConsent();
-                            }),
-                    ])->alignEnd(),
+                            ->icon(fn (ConsentOption $record) => $record->is_mandatory ? 'heroicon-o-check-badge' : 'heroicon-o-question-mark-circle')
+                            ->iconColor(fn (ConsentOption $record) => $record->is_mandatory ? 'success' : 'info')
+                            ->schema([
+                                TextEntry::make('text')->label('')
+                                    ->markdown(),
+                                ViewEntry::make('acceptConsent')
+                                    ->label('')
+                                    ->view('infolist.consent-option-checkbox'),
+                                // ConsentAcceptForm::make('Agreement Info'),
+                                TextEntry::make('updated_at')
+                                    ->label('')
+                                    ->alignEnd()
+                                    ->html()
+                                    ->state(function (ConsentOption $record): string {
+                                        return new HtmlString('<strong>Last Updated</strong>: ' . $record->updated_at->format('d M Y'));
+                                    })
+                            ])
+                            ->collapsible()
+                            ->collapsed(function (ConsentOption $record) {
+                                $first = $this->user->collections->first();
+                                return  !($first->id === $record->id);
+                            })
+                            //                                ->persistCollapsed()
+                            ->id(fn (ConsentOption $record) => "consent-option-{$record->id}"),
+                    ])
+                    ->contained(false)
+                    ->columns(2)
+                    ->columnSpanFull(),
+                Actions::make([
+                    Action::make('saveConsents')
+                        ->icon('heroicon-o-check-circle')
+                        ->color('success')
+                        ->before(function (Action $action) {
+                            $this->validateConsents($action);
+                        })
+                        ->action(function (array $data) {
+                            $this->acceptConsent();
+                        }),
+                ])->alignEnd(),
 
             ])->columns(1);
     }
@@ -144,15 +143,16 @@ class ConsentRequest extends SimplePage
     {
         $conentIds = [];
         $errorBags = [];
-        foreach($this->acceptConsents as $key => $value) {
-            if((bool)$value['accepted']) {
+        foreach ($this->acceptConsents as $key => $value) {
+            if ((bool)$value['accepted']) {
                 $conentIds[] = $key;
-            }
-            $consentOption = ConsentOption::find($key);
-            if((bool)$consentOption->additional_info) {
-                foreach ($consentOption->fields as $field) {
-                    if((bool)$field['required'] &&  (!isset($value[$field['name']]) || $value[$field['name']] == "")) {
-                        $errorBags[$key][$field['name']] = $field['name']." field is required";
+
+                $consentOption = ConsentOption::find($key);
+                if ((bool)$consentOption->additional_info) {
+                    foreach ($consentOption->fields as $field) {
+                        if ((bool)$field['required'] &&  (!isset($value[$field['name']]) || $value[$field['name']] == "")) {
+                            $errorBags[$key][$field['name']] = $field['name'] . " field is required";
+                        }
                     }
                 }
             }
@@ -162,7 +162,7 @@ class ConsentRequest extends SimplePage
 
         $validateMandatoryConsents = $this->user->requiredOutstandingConsentsValidate($conentIds);
 
-        if (! $validateMandatoryConsents || count($errorBags) > 0) {
+        if (!$validateMandatoryConsents || count($errorBags) > 0) {
             Notification::make()
                 ->title('Please confirm.!')
                 ->body('Please accept all required consent options.')
@@ -176,8 +176,8 @@ class ConsentRequest extends SimplePage
     public function acceptConsent()
     {
         $conentIds = [];
-        foreach($this->acceptConsents as $key => $value) {
-            if((bool)$value['accepted']) {
+        foreach ($this->acceptConsents as $key => $value) {
+            if ((bool)$value['accepted']) {
                 $conentIds[] = $key;
             }
         }

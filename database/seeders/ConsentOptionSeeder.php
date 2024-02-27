@@ -28,8 +28,10 @@ class ConsentOptionSeeder extends Seeder
                     'is_mandatory' => true,
                     'is_current'   => true,
                     'models'       => config('filament-user-consent.models'),
-                    'additional_info' => true,
+                    'force_user_update' => true,
                     'published_at' => now(),
+                    'additional_info' => true,
+                    'additional_info_title' => 'Submit your details',                                        
                     'fields'       => [
                         [
                             'name'     => 'name',
